@@ -1,6 +1,10 @@
 import useSEO from '../hooks/useSEO'
 import { useState } from 'react'
 import PageHero from '../components/PageHero'
+import { notifyOwner } from '../utils/brevo'
+
+// Formspree form ID for contact / custom-request messages
+const CONTACT_FORM_ID = 'mojppyke'
 
 const INIT = { name: '', email: '', subject: '', message: '' }
 
@@ -24,18 +28,16 @@ export default function ContactPage() {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
-    fetch('https://formspree.io/f/mojppyke', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
-        formType: 'contact',
-        name: form.name,
-        email: form.email,
-        subject: form.subject || '(no subject)',
-        message: form.message,
-        submittedAt: new Date().toISOString(),
-      }),
-    }).catch(() => {})
+    // Notify owner immediately — contact/custom-request messages fire right away
+    notifyOwner(CONTACT_FORM_ID, {
+      _subject: `📩 New Contact Message from ${form.name}`,
+      formType: 'contact',
+      name: form.name,
+      email: form.email,
+      subject: form.subject || '(no subject)',
+      message: form.message,
+      submittedAt: new Date().toISOString(),
+    })
     setSubmitted(true)
   }
 

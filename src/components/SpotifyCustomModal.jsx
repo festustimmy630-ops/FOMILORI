@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { COUNTRIES } from '../data'
 import ModalPortal from './ModalPortal'
+import { notifyOwner } from '../utils/brevo'
+
+// Formspree form ID for custom promotion requests — notifies owner immediately
+const CUSTOM_REQUEST_FORM_ID = 'mojppyke'
 
 const CHART_POSITIONS = [
   'Not targeting charts', 'Top 200 in a small market', 'Top 100 in a small market',
@@ -72,6 +76,20 @@ export default function SpotifyCustomModal({ isOpen, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
+    // Notify owner immediately — custom promotion requests fire right away
+    notifyOwner(CUSTOM_REQUEST_FORM_ID, {
+      _subject: `🎵 New Custom Promotion Request — ${form.artistName} (${tab})`,
+      formType: 'custom_request',
+      platform: tab,
+      artistName: form.artistName,
+      email: form.email,
+      trackLink: form.trackLink,
+      budget: form.budget,
+      country: form.country,
+      chartPosition: form.chartPosition || '',
+      notes: form.notes || '',
+      submittedAt: new Date().toISOString(),
+    })
     setSubmitted(true)
   }
 

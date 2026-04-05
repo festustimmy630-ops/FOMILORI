@@ -1,7 +1,23 @@
 // ── Brevo (Sendinblue) transactional email utility ────────────────────────────
 // Template 1 = Invoice  |  Template 2 = Payment Confirmation
 
-const BREVO_API_KEY = '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'
+// ── Formspree — owner notification helper ─────────────────────────────────────
+// Sends an instant notification to the site owner via Formspree.
+// formId  : the Formspree form ID (e.g. 'mojppyke')
+// payload : plain object of fields to include in the notification email
+export async function notifyOwner(formId, payload) {
+  try {
+    await fetch(`https://formspree.io/f/${formId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch (_) {
+    // Non-blocking — never throw; owner notification must not break the user flow
+  }
+}
+
+const BREVO_API_KEY = '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'
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email'
 const BASE_URL      = 'https://echorisemedia.com'
 

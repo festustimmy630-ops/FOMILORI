@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { sendPaymentConfirmation } from '../utils/brevo'
+import { sendPaymentConfirmation, notifyOwner } from '../utils/brevo'
 import ModalPortal from './ModalPortal'
+
+// Formspree form ID — owner notified ONLY after Flutterwave confirms payment
+const PAYMENT_FORM_ID = 'mojppyke'
 
 const FLW_PUBLIC_KEY = 'FLWPUBK-f9b17c5ddc2ffc1700b32fa0ff03eec8-X'
 
@@ -151,6 +154,23 @@ export default function PaymentModal({ orderData, onClose, onBack }) {
           } catch (e) {
             console.error('Brevo confirmation error:', e)
           }
+          // Notify owner via Formspree — fires ONLY after Flutterwave confirms payment
+          notifyOwner(PAYMENT_FORM_ID, {
+            _subject: `💰 Payment Confirmed — ${orderData.artistName} · ${pkg?.label || 'Custom'} · ${currency} ${chargeAmount.toLocaleString()}`,
+            formType: 'payment_confirmed',
+            artistName:     orderData.artistName,
+            email:          orderData.email,
+            platform:       orderData.platform,
+            package:        pkg?.label || pkg?.name || 'Custom Campaign',
+            country:        orderData.country,
+            amountUSD:      `$${priceUSD}`,
+            amountLocal:    `${currency} ${chargeAmount.toLocaleString()}`,
+            transactionRef: data.transaction_id ? `FLW-${data.transaction_id}` : txRef,
+            invoiceRef:     txRef,
+            trackLink:      orderData.trackLink || '',
+            notes:          orderData.notes     || '',
+            confirmedAt:    new Date().toISOString(),
+          })
           navigate('/success', { state: { orderData, invoiceNum: txRef, price: priceUSD } })
           onClose()
         } else {
